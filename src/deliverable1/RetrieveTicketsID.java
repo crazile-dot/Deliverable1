@@ -1,4 +1,4 @@
-package deliverable1;//
+package deliverable1;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -9,6 +9,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
@@ -37,23 +38,24 @@ public class RetrieveTicketsID {
 
     public static JSONArray readJsonArrayFromUrl(String url) throws IOException, JSONException {
       InputStream is = new URL(url).openStream();
-      try {
-         BufferedReader rd = new BufferedReader(new InputStreamReader(is, Charset.forName("UTF-8")));
-         String jsonText = readAll(rd);
-         JSONArray json = new JSONArray(jsonText);
-         return json;
-       } finally {
+      try (
+         BufferedReader rd = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
+       ) {  
+    	  String jsonText = readAll(rd);
+          return new JSONArray(jsonText);
+      } finally {
          is.close();
        }
     }
 
+    
     public static JSONObject readJsonFromUrl(String url) throws IOException, JSONException {
       InputStream is = new URL(url).openStream();
-      try {
-         BufferedReader rd = new BufferedReader(new InputStreamReader(is, Charset.forName("UTF-8")));
+      try (
+         BufferedReader rd = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
+    		  ){
          String jsonText = readAll(rd);
-         JSONObject json = new JSONObject(jsonText);
-         return json;
+         return new JSONObject(jsonText);
        } finally {
          is.close();
        }
@@ -61,17 +63,17 @@ public class RetrieveTicketsID {
    
     public static Date parseStringToDate(String string) throws ParseException{
 	   
-	   String format = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
-	   Date date = new SimpleDateFormat(format).parse(string); 
-	   
-	   return date;
+	   String format = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";	   
+	   return new SimpleDateFormat(format).parse(string);
     }
 
 
     public static void main(String[] args) throws IOException, JSONException, ParseException {
 		   
     	String projName ="RAMPART";
-    	Integer j = 0, i = 0, total = 1;
+    	Integer j = 0;
+    	Integer i = 0;
+    	Integer total = 1;
 		  //Get JSON API for closed bugs w/ AV in the project
 		  do {
 			 //Only gets a max of 1000 at a time, so must do this multiple times if bugs >1000
@@ -80,7 +82,6 @@ public class RetrieveTicketsID {
 			+ projName + "%22AND%22resolution%22=%22fixed%22&fields=key,resolutiondate,versions,created&startAt="
 			+ i.toString() + "&maxResults=" + j.toString();
 			
-			 //String [] ticket_array = new String[1000];
 			 JSONObject json = readJsonFromUrl(url);
 			 //FileWriter myWriter = new FileWriter("C:\\Users\\crazile\\Desktop\\anotheroutput.txt");
 			 //myWriter.write(json.toString());
@@ -90,7 +91,7 @@ public class RetrieveTicketsID {
 			 }*/
 			 //System.out.println(issues.length());
 			 //System.exit(0);
-			 List<Date> ticketList = new ArrayList<Date>();
+			 List<Date> ticketList = new ArrayList<>();
 			 total = json.getInt("total");
 			 for (; i < total && i < j; i++) {
 			 	JSONObject field = issues.getJSONObject(i%1000);
@@ -102,7 +103,7 @@ public class RetrieveTicketsID {
 			 System.out.println(ticketList);
 			 
 			 // prendo la lista dei ticket e creo una lista con tanti zeri quanti sono i mesi totali dal primo all'ultimo ticket
-			 List<Integer> ret = new ArrayList<Integer>();
+			 List<Integer> ret = new ArrayList<>();
 			 Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("Europe/Rome"));
 	         cal.setTime(ticketList.get(0));
 	         int startYear = cal.get(Calendar.YEAR);
@@ -126,7 +127,6 @@ public class RetrieveTicketsID {
 	                 int month2 = cal.get(Calendar.MONTH);
 	            	 if(month1 == month2 && year1 == year2) {
 	            		 ticketCounter = ticketCounter + 1;
-	            		 c1 = c1 + 1;
 	            	 }
 	            	 else
 	            		 break;
@@ -148,7 +148,7 @@ public class RetrieveTicketsID {
 	         writeDataInCSV(ticketList);
 	         
 		  } while (i < total);
-		  return;
+		  
 	}
     
 		
