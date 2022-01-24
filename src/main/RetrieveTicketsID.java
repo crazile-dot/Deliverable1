@@ -25,10 +25,8 @@ import org.json.JSONArray;
 
 public class RetrieveTicketsID {
 	
-	private static String PROJ_NAME = "RAMPART";
-	
-	private static final Logger LOGGER = Logger.getLogger(RetrieveTicketsID.class.getName());
-	
+	private static String projName = "RAMPART";
+		
     private static String readAll(Reader rd) throws IOException {
 	      StringBuilder sb = new StringBuilder();
 	      int cp;
@@ -105,7 +103,7 @@ public class RetrieveTicketsID {
            		 break;
             }
             //riempiamo la lista con il numero di ticket per ciascun mese
-            int index = ((year1-(nMonths-1))*12)+month1;
+            int index = ((year1-(zeroList.get(nMonths-1)))*12)+month1;
             zeroList.set(index, ticketCounter);
         }
         return zeroList;
@@ -116,23 +114,16 @@ public class RetrieveTicketsID {
     	Integer j = 0;
     	Integer i = 0;
     	Integer total = 1;
-		  //Get JSON API for closed bugs w/ AV in the project
+    	
 		  do {
-			 //Only gets a max of 1000 at a time, so must do this multiple times if bugs >1000
+
 			 j = i + 1000;
 			 String url = "https://issues.apache.org/jira/rest/api/2/search?jql=project=%22"
-			+ PROJ_NAME + "%22AND%22resolution%22=%22fixed%22&fields=key,resolutiondate,versions,created&startAt="
+			+ projName + "%22AND%22resolution%22=%22fixed%22&fields=key,resolutiondate,versions,created&startAt="
 			+ i.toString() + "&maxResults=" + j.toString();
 			
 			 JSONObject json = readJsonFromUrl(url);
-			 //FileWriter myWriter = new FileWriter("C:\\Users\\crazile\\Desktop\\anotheroutput.txt");
-			 //myWriter.write(json.toString());
 			 JSONArray issues = json.getJSONArray("issues");
-			 /*for (int k = 0; k < issues.length(); k++) {
-				 System.out.println(issues.getJSONObject(k));
-			 }*/
-			 //System.out.println(issues.length());
-			 //System.exit(0);
 			 List<Date> ticketList = new ArrayList<>();
 			 total = json.getInt("total");
 			 for (; i < total && i < j; i++) {
@@ -142,7 +133,6 @@ public class RetrieveTicketsID {
 			 }
 			 ticketList.sort(null);
 			 int ticketSize = ticketList.size();
-			 System.out.println(ticketList);
 			 
 			 Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("Europe/Rome"));
 			 List<Integer> ret = makeZeroList(ticketList, cal);
@@ -151,14 +141,10 @@ public class RetrieveTicketsID {
 	         
 	         //sum è il numero totale di ticket nell'intero periodo osservato
 	         int sum = 0;
-	         for(Integer elem: ret) {
+	         for(Integer elem: filled) {
 	        	  sum = sum + elem;
 	         }
-	         
-	         for(Date date: ticketList) {
-	        	 LOGGER.log(Level.INFO, String.valueOf(date));
-	         }  
-
+	        
 	         writeDataInCSV(ticketList);
 	         
 		  } while (i < total);
@@ -173,9 +159,9 @@ public class RetrieveTicketsID {
 	    Integer dataArraySize = dataArray.size();
 	  
 	    try (
-	    	BufferedWriter br = new BufferedWriter(new FileWriter("C:\\Users\\crazile\\Desktop\\data.csv"));) {
+	    	BufferedWriter br = new BufferedWriter(new FileWriter("C:\\Users\\Ilenia\\Desktop\\data.csv"));) {
 
-		    // Get some useful information about the time frame
+		    // ottengo info utili sul time frame
 		    ArrayList<Integer> dataArrayFinal = new ArrayList<>();
 		    Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("Europe/Rome"));
 		    cal.setTime(dataArray.get(0));
@@ -184,21 +170,18 @@ public class RetrieveTicketsID {
 		    int endYear = cal.get(Calendar.YEAR);
 		    int monthCounter = ((endYear + 1) - startYear) * 12;	         
 		   
-		    // Initialize array by 0-padding
+		    // inizializzo array di zeri
 		    for(; k < monthCounter; k++) {
 		    	dataArrayFinal.add(0);
 		    }
 		   
-		    // Write header of the csv file produced in output
 		    StringBuilder sb = new StringBuilder();
-		    //sb.append(type + " " + resolution);
 		    sb.append(",");
 		    sb.append("Resolution date");
 		    sb.append("\n");
 		    br.write(sb.toString());
 		   
-		    // Cycle on 'dataArray' counting for each month how many 
-		    // 'types' have been 'resolution'
+		    
 		    for(; l < dataArraySize; l++) {
 		    	int valueCounter = 1;
 		    	cal.setTime(dataArray.get(l));
@@ -218,14 +201,11 @@ public class RetrieveTicketsID {
 		            }
 		        }
 		       
-		        // Update the respective 'valueCounter' found in 'dataArrayFinal'
 		        int index = ((year - startYear) * 12) + month;
 		        dataArrayFinal.set(index, valueCounter);
 		    }		
 		   
 		   
-		    // Cycle on 'dataArrayFinal' to write 'valueCounter' associated
-		    // to month and year to the csv file
 		    int indexYear = 0;
 		    int indexMonth = 1;
 		    for(int elemDataArrayFinal : dataArrayFinal) {
@@ -238,7 +218,7 @@ public class RetrieveTicketsID {
 		    	int year = startYear + indexYear;
 		    	String dateForDataSet = indexMonth + "/" + year;
 		     
-		    	// Write data in csv file produced in output
+		    	// scrivo i dati nel file csv prodotto in output
 		    	StringBuilder sb2 = new StringBuilder();
 		    	sb2.append(elemDataArrayFinal);
 		    	sb2.append(",");
